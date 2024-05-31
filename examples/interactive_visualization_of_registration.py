@@ -6,7 +6,7 @@ import open3d as o3d
 from src.viz3d import draw_registration_result
 
 """
-A simple script that allows for manual inspection of each pairwise registration.
+A simple script that allows for manual inspection of a pairwise registration.
 
 The keys: 1,2,3 can be used during the visualization to highlight various things.
 
