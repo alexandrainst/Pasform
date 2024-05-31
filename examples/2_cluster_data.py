@@ -12,9 +12,9 @@ This script plots the fitness and distance matrix and does a clustering based on
 
 if __name__ == "__main__":
     np.set_printoptions(precision=2,linewidth=500)
-    path_in = '/home/tue/Data/Archaeology/results/0.2_1.5/high_res'
-    file_in = '/home/tue/Data/Archaeology/results/0.2_1.5/high_res/transformations.npz'
-    output_path = '/home/tue/Data/Archaeology/results/0.2_1.5/high_res/'
+    path_in = './data/results/0.2_1.5/high_res'
+    file_in = './data/results/0.2_1.5/high_res/transformations.npz'
+    output_path = './data/results/0.2_1.5/high_res/'
     with np.load(file_in, allow_pickle=True) as data:
         fits = data['fits']
         inlier_rmses = data['inlier_rmses']

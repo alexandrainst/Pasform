@@ -17,8 +17,8 @@ def load_file_and_to_pc(fn):
 
 
 if __name__ == "__main__":
-    input_dir = Path('/home/tue/Data/Archaeology/stl/original data')
-    base_output_dir = '/home/tue/Data/tmp/Archaeology/pointcloud/'
+    input_dir = Path('./data/stl/')
+    base_output_dir = './data/pointcloud/'
     voxel_sizes = [0.1, 0.2, 0.5, 1.0, 1.5, 2.0]
 
     for fp in input_dir.glob('*.stl'):

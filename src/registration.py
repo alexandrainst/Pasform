@@ -16,7 +16,7 @@ from src.registration_utils import RANSAC_open3d, ICP_open3d, boundingbox_inters
 from src.viz3d import draw_registration_result, save_image_of_3d
 
 
-def prepare_base_set(path,voxel_size,path_low_res,voxel_size_low_res,max_files=-1,output_folder=None, draw_samples=False, indices=None, order_by_boundingbox=True):
+def prepare_base_set(path,voxel_size,path_low_res,voxel_size_low_res,max_files=99,output_folder=None, draw_samples=False, indices=None, order_by_boundingbox=True):
     """
     """
     files = glob.glob(os.path.join(path,'') + "*.pcd")
