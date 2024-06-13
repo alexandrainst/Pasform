@@ -1,4 +1,4 @@
-# Automated feature recognition for 3D scanned archaeological artefacts
+# Automated similarity search for 3D scanned archaeological artefacts
 
 This project compares various artefacts through point cloud registration and clustering, for more information see: (paper link coming here) 
 
