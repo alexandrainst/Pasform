@@ -22,7 +22,6 @@ def prepare_base_set(path,voxel_size,path_low_res,voxel_size_low_res,max_files=9
     files = glob.glob(os.path.join(path,'') + "*.pcd")
     files.sort()
     files = files[:max_files]
-    names = [Path(file).stem for file in files]
     if indices is not None:
         files = [files[i] for i in indices]
 

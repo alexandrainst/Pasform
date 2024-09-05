@@ -14,11 +14,8 @@ Each point cloud is pairwise registrered against the others, first globally (usi
 if __name__ == "__main__":
     input_path = "./data/pointcloud/voxel_downsampled/0.2"
     input_path_low_res = "./data/pointcloud/voxel_downsampled/1.5"
-    output_path_root = './data/results/'
-    # indices = [48, 58, 59, 64, 65, 1, 6, 22, 25, 63, 51, 66] # We only select a certain subset of artefacts among the ones available.
-    indices = None
-    names = ['DIME215055','C41222','C30567_urnes','D11058_urnes','D160-1997_urnes','Dime141357','Dime141360','Dime_198107_starshaped','559295_hst','B10420','B5884f_a','B601_a']
-    names.sort()
+    output_path_root = './data/results_tmp/'
+    indices = [4, 6, 7, 9, 10, 0, 1, 2, 3, 8, 5, 11] # The specific ordering or selection of artefacts.
 
     voxel_size = float(input_path.split("/")[-1])
     if input_path_low_res is None:

@@ -15,8 +15,9 @@ The keys: 1,2,3 can be used during the visualization to highlight various things
 
 if __name__ == "__main__":
     voxel_size = 0.2
-    input_path = f"./data/pointcloud/voxel_downsampled/{voxel_size}"
-    transformations_file = './results/0.2_1.5/high_res/transformations.npz'
+    # input_path = f"./data/pointcloud/voxel_downsampled/{voxel_size}"
+    input_path = f"/home/tue/Data/Archaeology/pointcloud/voxel_downsampled/{voxel_size}"
+    transformations_file = f"/home/tue/Data/Archaeology/results/0.2_1.5/high_res/transformations.npz"
     voxel_size = float(input_path.split("/")[-1])
     name_source = 'Dime_198107_starshaped'
     name_target = 'C41222'
@@ -26,6 +27,9 @@ if __name__ == "__main__":
 
     # name_source = 'Dime141357'  # u_4f
     # name_target = 'DIME215055'  # b_5f
+
+    name_source = 'DIME215055'
+    name_target = 'B601_a'
 
     name = name_source + '_' + name_target
     data = np.load(transformations_file, allow_pickle=True)
