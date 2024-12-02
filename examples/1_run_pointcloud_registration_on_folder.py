@@ -1,9 +1,11 @@
+import argparse
 import os
 
 from matplotlib import pyplot as plt
 
-from src.registration import prepare_base_set
-from src.viz import mshow
+from pasform.registration import prepare_base_set
+from pasform.utils import set_seed
+from pasform.viz import mshow
 
 """
 This script takes a path to a bunch of point cloud files, in both high and low resolution.
@@ -12,9 +14,19 @@ Each point cloud is pairwise registrered against the others, first globally (usi
 
 
 if __name__ == "__main__":
-    input_path = "./data/pointcloud/voxel_downsampled/0.2"
-    input_path_low_res = "./data/pointcloud/voxel_downsampled/1.5"
-    output_path_root = './data/results_tmp/'
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_path', type=str, default='./data/pointcloud/voxel_downsampled/0.2' ,help='Path to input stl files in high resolution')
+    parser.add_argument('--input_path_low_res', type=str, default='./data/pointcloud/voxel_downsampled/1.5' ,help='Path to input stl files in low resolution')
+    parser.add_argument('--output_path', type=str, default='./data/results/', help='Base output path, where all the results will be saved.')
+    args = parser.parse_args()
+
+    set_seed(args.seed)
+
+    input_path = args.input_path
+    input_path_low_res = args.input_path_low_res
+    output_path_root = args.output_path
+
     indices = [4, 6, 7, 9, 10, 0, 1, 2, 3, 8, 5, 11] # The specific ordering or selection of artefacts.
 
     voxel_size = float(input_path.split("/")[-1])
@@ -27,7 +39,7 @@ if __name__ == "__main__":
 
     os.makedirs(output_path, exist_ok=True)
 
-    names, fits, inlier_rmse, transformations = prepare_base_set(input_path,voxel_size,input_path_low_res,voxel_size_low_res,output_folder=output_path, draw_samples=False,indices=indices)
+    names, fits, inlier_rmse, transformations = prepare_base_set(input_path,voxel_size,input_path_low_res,voxel_size_low_res,output_folder=output_path, indices=indices)
     n = len(fits)
     fig, axs = plt.subplots(1, 2, figsize=(15,15))
     mshow(axs[0], fits, n, f'fitness, voxel={voxel_size:1.1f}',labels=names)

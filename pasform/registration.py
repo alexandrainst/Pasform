@@ -1,4 +1,3 @@
-import copy
 import glob
 import os
 from os.path import exists
@@ -7,17 +6,24 @@ from time import perf_counter
 
 import numpy as np
 import open3d as o3d
-from seaborn import color_palette
-from sklearn.cluster import KMeans
 from tqdm import tqdm
 
-from src.feature_methods import get_features, copy_and_transform_pc
-from src.registration_utils import RANSAC_open3d, ICP_open3d, boundingbox_intersect
-from src.viz3d import draw_registration_result, save_image_of_3d
+from src.feature_methods import get_features
+from src.registration_utils import RANSAC_open3d, ICP_open3d
+from src.viz3d import save_image_of_3d
 
 
-def prepare_base_set(path,voxel_size,path_low_res,voxel_size_low_res,max_files=99,output_folder=None, draw_samples=False, indices=None, order_by_boundingbox=True):
+def prepare_base_set(path,voxel_size,path_low_res,voxel_size_low_res,output_folder,max_files=99,indices=None):
     """
+    Runs a twofold pairwise registration between a set of pointclouds.
+
+    path: Input path to the high resolution point clouds
+    voxel_size: The voxel size used for the high resolution point clouds
+    path_low_res: Input path to the low resolution point clouds
+    voxel_size_low_res: The voxel size used for the low resolution point clouds
+    output_folder: The base output folder where all the results will be saved
+    max_files: The maximum number of files to consider (can be used to run a subset of the files for quick testing)
+    indices: A list of indices to consider. If None, then all files are considered.
     """
     files = glob.glob(os.path.join(path,'') + "*.pcd")
     files.sort()
@@ -36,7 +42,7 @@ def prepare_base_set(path,voxel_size,path_low_res,voxel_size_low_res,max_files=9
         filename, filename_low_res = os.path.basename(file), os.path.basename(file_low_res)
         assert filename == filename_low_res, f"{filename}, does not match the low resolution version: {file_low_res}. The folder with low resolution files should contain identical files names as the normal resolution one"
     names = [Path(file).stem for file in files]
-    print(names)
+    print(f"Running pairwise point cloud registration on the following: {names}")
     output_path_low_res = os.path.join(output_folder,'low_res')
     output_path_high_res = os.path.join(output_folder,'high_res')
     transformations_low_res, fits_low_res, inlier_rmse_low_res, cloud_sizes_low_res = compare_all_to_all(files_low_res,voxel_size_low_res,output_path_low_res,save_image=True, ids=names)
@@ -44,7 +50,17 @@ def prepare_base_set(path,voxel_size,path_low_res,voxel_size_low_res,max_files=9
 
     return names, fits, inlier_rmse, transformations
 
+
 def compare_all_to_all(files, voxel_size, output_path, init_transforms=None, save_image=False, debug=False,overwrite=False, ids=None):
+    """
+    Runs pairwise comparison of all point clouds in files. If you have n files this leads to n^2-n comparisons.
+
+    Note that this will cache the results as it is running into a file called transformations.npz in the output_path.
+    Unless overwrite is set to True, then it will not recompute point registrations already existing in the transformation.npz file.
+    inint_transform can be used to provide an initial transformation for each pair of point clouds.
+    ids can be used to give each point cloud a name. Otherwise, the point clouds will be named 0 to n-1 according to the list provided in files.
+
+    """
     os.makedirs(output_path, exist_ok=True)
     checkpoint_file = os.path.join(output_path,f"transformations.npz")
     nfiles = len(files)
@@ -89,7 +105,7 @@ def compare_all_to_all(files, voxel_size, output_path, init_transforms=None, sav
                 pc_source = o3d.io.read_point_cloud(file_source)
                 p_source = np.asarray(pc_source.points).shape[0]
 
-                registration_result = pc_registration2(pc_source, pc_target, voxel_size, init_transform=init_transform,print_performance=debug)
+                registration_result = pc_registration(pc_source, pc_target, voxel_size, init_transform=init_transform,print_performance=debug)
 
                 fits[i,j] = registration_result.fitness
                 inlier_rmses[i,j] = registration_result.inlier_rmse
@@ -112,7 +128,7 @@ def compare_all_to_all(files, voxel_size, output_path, init_transforms=None, sav
                 # save_image_of_3d(pc_target, output_file, pc_source=pc_source,transform_source=registration_result_local.transformation)
 
 
-def pc_registration2(pc_source,pc_target,voxel_size, init_transform=None, local_refinement=True, print_performance=False):
+def pc_registration(pc_source,pc_target,voxel_size, init_transform=None, local_refinement=True, print_performance=False):
     """
     Takes 2 point clouds and performs registration.
     If no init_transform is given, then a global transformation is performed in order to generate an init_transform
@@ -148,98 +164,4 @@ def pc_registration2(pc_source,pc_target,voxel_size, init_transform=None, local_
     if print_performance:
         print(f"{t1-t0:2.2f}s, {t2-t1:2.2f}s, {t3-t2:2.2f}s, {t4-t3:2.2f}s")
     return registration_result
-
-
-
-
-def pc_registration(pc_source,pc_target,voxel_size, init_transform=None, only_intersection=False):
-    """
-    Takes 2 point clouds and performs registration.
-    If no init_transform is given, then a global transformation is performed in order to generate an init_transform
-    If only_intersetion=True, then the point clouds are cropped to their intersecting bounding boxes
-    Returns the registration_result object
-    """
-    radius_normal = voxel_size * 2
-    feature_radius = voxel_size * 5
-    distance_threshold = voxel_size * 3
-    search_param = o3d.geometry.KDTreeSearchParamHybrid(radius=radius_normal, max_nn=30)
-    bb_intersect = None
-
-    pc_source.estimate_normals(search_param) #This estimates the normals and adds them directly to the object
-    source_features = get_features(pc_source,feature_radius)
-
-    pc_target.estimate_normals(search_param)
-    target_features = get_features(pc_target,feature_radius)
-
-    if init_transform is None:
-        global_registration_result = RANSAC_open3d(pc_source, pc_target, source_features, target_features, distance_threshold)
-        init_transform = global_registration_result.transformation
-
-    if only_intersection:
-        pc_source = copy_and_transform_pc(pc_source, init_transform)
-        bb_intersect = boundingbox_intersect(pc_source, pc_target)
-        pc_source = pc_source.crop(bb_intersect)
-        pc_target = pc_target.crop(bb_intersect)
-        pc_source.transform(np.linalg.pinv(init_transform)) # We need to transform the source back to origin again such that it works with the init_transform next
-
-    registration_result = ICP_open3d(pc_source, pc_target, init_transform, distance_threshold)
-    return registration_result, bb_intersect
-
-
-def pc_registration_patches(pc_source,pc_target,voxel_size, init_transform=None, k=50, draw_samples=True):
-    """
-    Takes 2 point clouds and performs patchwise registration.
-    If no init_transform is given, then a global transformation is performed in order to generate an init_transform
-    k is the number of patches/clusters that the point cloud is split into
-    Returns the registration_result object
-    """
-    radius_normal = voxel_size * 2
-    feature_radius = voxel_size * 5
-    distance_threshold = voxel_size * 3
-    search_param = o3d.geometry.KDTreeSearchParamHybrid(radius=radius_normal, max_nn=30)
-
-    pc_source.estimate_normals(search_param) #This estimates the normals and adds them directly to the object
-    source_features = get_features(pc_source,feature_radius)
-
-    pc_target.estimate_normals(search_param)
-    target_features = get_features(pc_target,feature_radius)
-
-    if init_transform is None:
-        global_registration_result = RANSAC_open3d(pc_source, pc_target, source_features, target_features, distance_threshold)
-        init_transform = global_registration_result.transformation
-
-    p1p = np.asarray(pc_source.points)
-    kmeans = KMeans(n_clusters=k, init='k-means++', n_init=3, max_iter=50)
-    kmeans.fit(p1p)
-
-    registration_best_fit = 0
-    registration_inlier_rmse = 99
-    registration_results = []
-    samples = np.empty(k,dtype=np.int64)
-    if draw_samples:
-        winname = f"All {k} patches"
-        colors = np.empty((len(pc_source.points),3))
-        clrs = color_palette('husl', n_colors=k)
-        for i in range(k):
-            indices = np.where(kmeans.labels_ == i)[0]
-            colors[indices] = clrs[i]
-        tmp_pc_source = copy.deepcopy(pc_source)
-        tmp_pc_source.colors = o3d.utility.Vector3dVector(colors)
-        draw_registration_result(tmp_pc_source, pc_target, transformation=init_transform, winname=winname,
-                                 threshold=distance_threshold,add_color=False)
-
-    for i in range(k):
-        indices = np.where(kmeans.labels_ == i)[0]
-        samples[i] = len(indices)
-        pc_patch = pc_source.select_by_index(indices)
-        registration_result_i = ICP_open3d(pc_patch, pc_target, init_transform, distance_threshold)
-        registration_results.append(registration_result_i)
-        if draw_samples:
-            winname = f"Patch={i}/{k}, samples={samples[i]}, fit={registration_result_i.fitness:2.2f}, rmse={registration_result_i.inlier_rmse:2.2f}"
-            draw_registration_result(pc_patch,pc_target, transformation=registration_result_i.transformation,winname=winname, threshold=distance_threshold)
-        if registration_result_i.fitness > registration_best_fit:
-            registration_best_fit = registration_result_i.fitness
-            registration_inlier_rmse = registration_result_i.inlier_rmse
-
-    return registration_results, samples, kmeans.labels_, (registration_best_fit, registration_inlier_rmse)
 

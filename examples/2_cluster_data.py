@@ -1,24 +1,36 @@
+import argparse
 import os
 
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.cluster import KMeans
 
-from src.viz import mshow
+from pasform.utils import set_seed
+from pasform.viz import mshow
 
 """
 This script plots the fitness and distance matrix and does a clustering based on the distances.
+It also plots an image all the point cloud registrations. 
 """
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_image_path', type=str, default='./data/results/0.2_1.5/low_res' ,help='Path to all the point cloud registration images.')
+    parser.add_argument('--input_file_transformation', type=str, default='./data/results/0.2_1.5/low_res/transformations.npz' ,help='Path to the transformation file.')
+    parser.add_argument('--output_path', type=str, default='./data/results/clustering', help='Base output path, where all the results will be saved.')
+    parser.add_argument('--names', type=list, default=[r'$u_1$', r'$u_2$', r'$u_3$', r'$u_{4,f}$', r'$u_{5,f}$', r'$b_1$', r'$b_2$', r'$b_{3}$', r'$b_{4}$', r'$b_{5f}$', r'$s_{1}$', r'$s_{2f}$'], help='A list of names for all the point clouds being compared')
+    args = parser.parse_args()
+
+    set_seed(args.seed)
+
+
     np.set_printoptions(precision=2,linewidth=500)
-    # path_in = './data/results/0.2_1.5/high_res'
-    # file_in = './data/results/0.2_1.5/high_res/transformations.npz'
-    # output_path = './data/results/0.2_1.5/high_res/'
-    path_in = './data/results_tmp/0.2_1.5/low_res'
-    file_in = './data/results_tmp/0.2_1.5/low_res/transformations.npz'
-    output_path = './data/results_tmp/0.2_1.5/low_res/'
-    with np.load(file_in, allow_pickle=True) as data:
+    path_images_in = args.input_image_path
+    file_transformation_in = args.input_file_transformation
+    output_path = args.output_path
+    os.makedirs(output_path, exist_ok=True)
+
+    with np.load(file_transformation_in, allow_pickle=True) as data:
         fits = data['fits']
         inlier_rmses = data['inlier_rmses']
         computed = data['computed']
@@ -30,7 +42,7 @@ if __name__ == "__main__":
     max_relative_sizes = np.max([c1[:, None], c2[:, None]], axis=0).reshape(cloud_sizes.shape)
 
     x = fits
-    names = np.asarray([r'$u_1$', r'$u_2$', r'$u_3$', r'$u_{4,f}$', r'$u_{5,f}$', r'$b_1$', r'$b_2$', r'$b_{3}$', r'$b_{4}$', r'$b_{5f}$', r'$s_{1}$', r'$s_{2f}$'])
+    names = np.asarray(args.names)
     n = x.shape[0]
     x_sym = np.maximum(x,x.T)
     dist = 1 - x_sym
@@ -63,14 +75,14 @@ if __name__ == "__main__":
 
 
     indices = np.argsort(labels)
-    print(labels[indices])
-    print(names[indices])
+    print(f"The names ordered by clustering groups: \n{names[indices]}")
+    print(f"{labels[indices]}")
 
     ii = np.arange(n)[indices]
     fig1,axs = plt.subplots(n,n, figsize=(n,n), dpi=1000)
     for i in range(n):
         for j in range(n):
-            filename = os.path.join(path_in,f"{ii[i]}_{ii[j]}.png")
+            filename = os.path.join(path_images_in,f"{ii[i]}_{ii[j]}.png")
             ax = axs[i,j]
             aa= plt.imread(filename)
             ax.imshow(aa)
@@ -84,7 +96,6 @@ if __name__ == "__main__":
         axs[-1, i].set_xlabel(names[i], fontsize=8)
     file_out = os.path.join(output_path,"all.png")
     fig1.savefig(file_out, bbox_inches='tight')
-    print("done")
 
 
 

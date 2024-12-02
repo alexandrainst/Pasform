@@ -1,13 +1,12 @@
 [tool.poetry]
 name = "pasform"
 version = "0.1.0"
-package-mode = false
 description = "A pipeline for 3D registration and clustering of archaelogical artefacts."
 authors = ["Tue Boesen <tue.boesen@alexandra.dk>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "~3.11"
 numpy = "^1.26.4"
 torch = "^2.2.1"
 pyvista = "^0.43.4"

@@ -1,12 +1,8 @@
-import glob
-import os
-import shutil
 import zipfile
 from os.path import exists
-from pathlib import Path
 
-from tqdm import tqdm
 import requests
+from tqdm import tqdm
 
 """
 A simple script that downloads a dataset from zenodo and extracts it.

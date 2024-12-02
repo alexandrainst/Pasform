@@ -2,9 +2,10 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+from pasform.registration_utils import extract_registration_patches_results
+
 matplotlib.use('agg')
 
-from src.registration_utils import extract_registration_patches_results
 
 
 def plot_registration_patches(registration_result_patches, samples, save=None, title=''):
@@ -52,7 +53,6 @@ def mshow(ax, matrix, max_val, title,labels, vmin=None):
         for j in range(max_val):
             c = matrix[j, i]
             ax.text(i, j, '{:.2f}'.format(c), va='center', ha='center')
-    # if
     ax.set(xticks=(np.arange(len(labels))), xticklabels=labels, yticks=(np.arange(len(labels))), yticklabels=labels),# xlabel='source', ylabel='target')
     ax.set_xticklabels(labels,rotation=45, fontsize=18,label='source')
     ax.set_yticklabels(labels, fontsize=18)

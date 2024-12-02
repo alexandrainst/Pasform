@@ -109,11 +109,6 @@ def draw_registration_result(source, target, transformation=np.identity(4), winn
                                                          key_to_callback,
                                                          window_name=winname,
                                                          width=1000, height=600)
-
-    # o3d.visualization.draw_geometries_with_key_callbacks([source_temp, target_temp],
-    #                                                      key_to_callback,
-    #                                                      window_name=winname,
-    #                                                      width=1000, height=600)
     return
 
 
