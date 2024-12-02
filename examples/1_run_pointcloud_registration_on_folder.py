@@ -19,6 +19,8 @@ if __name__ == "__main__":
     parser.add_argument('--input_path', type=str, default='./data/pointcloud/voxel_downsampled/0.2' ,help='Path to input stl files in high resolution')
     parser.add_argument('--input_path_low_res', type=str, default='./data/pointcloud/voxel_downsampled/1.5' ,help='Path to input stl files in low resolution')
     parser.add_argument('--output_path', type=str, default='./data/results/', help='Base output path, where all the results will be saved.')
+    parser.add_argument('--ordering_of_artefacts', type=list, default=[4, 6, 7, 9, 10, 0, 1, 2, 3, 8, 5, 11], help='The ordering of the artefacts. This can be used to reorder the artefacts in the confusion matrix.')
+    parser.add_argument('--seed', type=int, default=1234, help='A seed for the randomizers, to ensure reproduceable results.')
     args = parser.parse_args()
 
     set_seed(args.seed)
@@ -26,8 +28,7 @@ if __name__ == "__main__":
     input_path = args.input_path
     input_path_low_res = args.input_path_low_res
     output_path_root = args.output_path
-
-    indices = [4, 6, 7, 9, 10, 0, 1, 2, 3, 8, 5, 11] # The specific ordering or selection of artefacts.
+    indices = args.ordering_of_artefacts
 
     voxel_size = float(input_path.split("/")[-1])
     if input_path_low_res is None:
@@ -39,7 +40,7 @@ if __name__ == "__main__":
 
     os.makedirs(output_path, exist_ok=True)
 
-    names, fits, inlier_rmse, transformations = prepare_base_set(input_path,voxel_size,input_path_low_res,voxel_size_low_res,output_folder=output_path, indices=indices)
+    names, fits, inlier_rmse, transformations = prepare_base_set(input_path,voxel_size,input_path_low_res,voxel_size_low_res,output_folder=output_path, indices=indices, max_files=3)
     n = len(fits)
     fig, axs = plt.subplots(1, 2, figsize=(15,15))
     mshow(axs[0], fits, n, f'fitness, voxel={voxel_size:1.1f}',labels=names)

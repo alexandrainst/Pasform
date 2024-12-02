@@ -19,6 +19,7 @@ if __name__ == "__main__":
     parser.add_argument('--input_file_transformation', type=str, default='./data/results/0.2_1.5/low_res/transformations.npz' ,help='Path to the transformation file.')
     parser.add_argument('--output_path', type=str, default='./data/results/clustering', help='Base output path, where all the results will be saved.')
     parser.add_argument('--names', type=list, default=[r'$u_1$', r'$u_2$', r'$u_3$', r'$u_{4,f}$', r'$u_{5,f}$', r'$b_1$', r'$b_2$', r'$b_{3}$', r'$b_{4}$', r'$b_{5f}$', r'$s_{1}$', r'$s_{2f}$'], help='A list of names for all the point clouds being compared')
+    parser.add_argument('--seed', type=int, default=1234, help='A seed for the randomizers, to ensure reproduceable results.')
     args = parser.parse_args()
 
     set_seed(args.seed)

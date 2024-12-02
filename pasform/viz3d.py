@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import open3d as o3d
 
-from src.registration_utils import compute_inliers
+from pasform.registration_utils import compute_inliers
 
 
 def save_image_of_3d(pc_target, save, pc_source=None, transform_source=None):

@@ -8,9 +8,9 @@ import numpy as np
 import open3d as o3d
 from tqdm import tqdm
 
-from src.feature_methods import get_features
-from src.registration_utils import RANSAC_open3d, ICP_open3d
-from src.viz3d import save_image_of_3d
+from pasform.feature_methods import get_features
+from pasform.registration_utils import RANSAC_open3d, ICP_open3d
+from pasform.viz3d import save_image_of_3d
 
 
 def prepare_base_set(path,voxel_size,path_low_res,voxel_size_low_res,output_folder,max_files=99,indices=None):

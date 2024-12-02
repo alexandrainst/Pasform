@@ -1,11 +1,12 @@
 import zipfile
+import os
 from os.path import exists
 
 import requests
 from tqdm import tqdm
 
 """
-A simple script that downloads a dataset from zenodo and extracts it.
+A simple script that downloads a dataset from zenodo and extracts it, afterwards it deletes the zip file again.
 """
 
 def download_zenodo_artefacts(filename, overwrite=False):
@@ -33,9 +34,10 @@ def download_zenodo_artefacts(filename, overwrite=False):
 
 if __name__ == "__main__":
     filename = "brooches.zip"
-    directory_to_extract_in = '.'
+    directory_to_extract_in = './data'
 
     download_zenodo_artefacts(filename)
 
     with zipfile.ZipFile(filename, 'r') as zip_ref:
         zip_ref.extractall(directory_to_extract_in)
+    os.remove(filename)

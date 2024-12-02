@@ -4,7 +4,7 @@ import os
 import numpy as np
 import open3d as o3d
 
-from src.viz3d import draw_registration_result
+from pasform.viz3d import draw_registration_result
 
 """
 A simple script that allows for manual inspection of a pairwise registration.

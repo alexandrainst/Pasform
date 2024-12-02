@@ -9,12 +9,6 @@ To get a working environment for the project install the packages in the pyproje
 poetry install
 ```
 
-When you run the code, if you get any errors about src not being part of the module, then you need to add the root folder to you python path environment variable.
-In a terminal this can be done as such:
-```shell
-export PYTHONPATH=$PYTHONPATH:$(pwd)
-```
-
 ## Getting started
 
 The first thing you will need is a dataset to run the pipeline on. The dataset used in the paper can be found at: https://zenodo.org/records/11401136/files/stl.zip?download=1.
