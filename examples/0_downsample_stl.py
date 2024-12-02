@@ -1,3 +1,4 @@
+import argparse
 import os
 from pathlib import Path
 
@@ -17,8 +18,16 @@ def load_file_and_to_pc(fn):
 
 
 if __name__ == "__main__":
-    input_dir = Path('./data/stl/')
-    base_output_dir = './data/pointcloud/'
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_path', type=str, default='./data/stl/' ,help='Path to input stl files')
+    parser.add_argument('--output_path', type=str, default='./data/pointcloud/', help='Base output path, where all the results will be saved.')
+    args = parser.parse_args()
+
+
+    input_dir = Path(args.input_path)
+    base_output_dir = Path(args.output_path)
+
     voxel_sizes = [0.1, 0.2, 0.5, 1.0, 1.5, 2.0]
 
     for fp in input_dir.glob('*.stl'):

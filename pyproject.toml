@@ -1,6 +1,7 @@
 [tool.poetry]
 name = "pasform"
 version = "0.1.0"
+package-mode = false
 description = "A pipeline for 3D registration and clustering of archaelogical artefacts."
 authors = ["Tue Boesen <tue.boesen@alexandra.dk>"]
 readme = "README.md"

@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 from matplotlib import pyplot as plt
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, HDBSCAN
 
 from src.viz import mshow
 
@@ -24,10 +24,18 @@ if __name__ == "__main__":
         computed = data['computed']
         id_matrix = data['id_matrix']
         cloud_sizes = data['cloud_sizes']
+    file_in = '/home/tue/Data/Archaeology/results/0.2_1.5/high_res/transformations.npz'
+    with np.load(file_in, allow_pickle=True) as data:
+        fits = data['fits']
+        inlier_rmses = data['inlier_rmses']
+        computed = data['computed']
+        id_matrix2 = data['id_matrix']
     cloud_sizes[np.arange(cloud_sizes.shape[0]),np.arange(cloud_sizes.shape[0])] = 1
     c1 = cloud_sizes.reshape(-1)
     c2 = 1 / c1
-    max_relative_sizes = np.max([c1[:, None], c2[:, None]], axis=0).reshape(cloud_sizes.shape)
+    max_relative_sizes = np.sqrt(np.max([c1[:, None], c2[:, None]], axis=0).reshape(cloud_sizes.shape))
+    # max_relative_sizes = np.cbrt(np.max([c1[:, None], c2[:, None]], axis=0).reshape(cloud_sizes.shape))
+
 
     x = fits
     names = np.asarray([r'$u_1$', r'$u_2$', r'$u_3$', r'$u_{4,f}$', r'$u_{5,f}$', r'$b_1$', r'$b_2$', r'$b_{3}$', r'$b_{4}$', r'$b_{5f}$', r'$s_{1}$', r'$s_{2f}$'])
@@ -46,8 +54,10 @@ if __name__ == "__main__":
     file_out = os.path.join(output_path,"clustering_dist_only.png")
     fig.savefig(file_out, bbox_inches='tight')
 
+    dist2 = dist * max_relative_sizes
+
     fig, axs = plt.subplots(1, 1, figsize=(8, 8))
-    mshow(axs, dist/max_relative_sizes, n, f'Size adjusted distance', labels=names, vmin='paper')
+    mshow(axs, dist2, n, f'Size adjusted distance', labels=names, vmin='paper')
     file_out = os.path.join(output_path, "clustering_size_dist_only.png")
     fig.savefig(file_out, bbox_inches='tight')
 
@@ -58,8 +68,16 @@ if __name__ == "__main__":
 
 
     # Clustering with Kmeans
-    means = KMeans(n_clusters=3, random_state=0, n_init=10).fit(dist)
+    means = KMeans(n_clusters=3, random_state=0, n_init=10).fit(dist2)
     labels = means.labels_
+
+    indices = np.argsort(labels)
+    print(labels[indices])
+    print(names[indices])
+
+    # Clustering with HDBSCAN
+    hdb = HDBSCAN(min_cluster_size=2)
+    labels = hdb.fit_predict(dist2)
 
 
     indices = np.argsort(labels)

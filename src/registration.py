@@ -25,26 +25,22 @@ def prepare_base_set(path,voxel_size,path_low_res,voxel_size_low_res,max_files=9
     if indices is not None:
         files = [files[i] for i in indices]
 
-    if path_low_res is None:
-        pc_source_low_res = None
-        pc_target_low_res = None
-    else:
-        assert voxel_size_low_res > voxel_size, "Low res voxel size must be larger than normal voxel size if used."
-        files_low_res = glob.glob(os.path.join(path_low_res,'') + "*.pcd")
-        files_low_res.sort()
-        files_low_res = files_low_res[:max_files]
-        if indices is not None:
-            files_low_res = [files_low_res[i] for i in indices]
+    assert voxel_size_low_res > voxel_size, "Low res voxel size must be larger than normal voxel size if used."
+    files_low_res = glob.glob(os.path.join(path_low_res,'') + "*.pcd")
+    files_low_res.sort()
+    files_low_res = files_low_res[:max_files]
+    if indices is not None:
+        files_low_res = [files_low_res[i] for i in indices]
 
-        for file, file_low_res in zip(files,files_low_res):
-            filename, filename_low_res = os.path.basename(file), os.path.basename(file_low_res)
-            assert filename == filename_low_res, f"{filename}, does not match the low resolution version: {file_low_res}. The folder with low resolution files should contain identical files names as the normal resolution one"
+    for file, file_low_res in zip(files,files_low_res):
+        filename, filename_low_res = os.path.basename(file), os.path.basename(file_low_res)
+        assert filename == filename_low_res, f"{filename}, does not match the low resolution version: {file_low_res}. The folder with low resolution files should contain identical files names as the normal resolution one"
     names = [Path(file).stem for file in files]
     print(names)
     output_path_low_res = os.path.join(output_folder,'low_res')
     output_path_high_res = os.path.join(output_folder,'high_res')
-    transformations_low_res, fits_low_res, inlier_rmse_low_res = compare_all_to_all(files_low_res,voxel_size_low_res,output_path_low_res,save_image=True, ids=names)
-    transformations, fits, inlier_rmse = compare_all_to_all(files,voxel_size,output_path_high_res,init_transforms=transformations_low_res,save_image=True, ids=names)
+    transformations_low_res, fits_low_res, inlier_rmse_low_res, cloud_sizes_low_res = compare_all_to_all(files_low_res,voxel_size_low_res,output_path_low_res,save_image=True, ids=names)
+    transformations, fits, inlier_rmse, cloud_sizes = compare_all_to_all(files,voxel_size,output_path_high_res,init_transforms=transformations_low_res,save_image=True, ids=names)
 
     return names, fits, inlier_rmse, transformations
 
@@ -62,6 +58,7 @@ def compare_all_to_all(files, voxel_size, output_path, init_transforms=None, sav
         inlier_rmses = data['inlier_rmses']
         computed = data['computed']
         id_matrix = data['id_matrix']
+        cloud_sizes = data['cloud_sizes']
     else:
         transformations = np.empty((nfiles, nfiles), dtype=object)
         fits = np.ones((nfiles, nfiles))
@@ -69,12 +66,14 @@ def compare_all_to_all(files, voxel_size, output_path, init_transforms=None, sav
         computed = np.zeros((nfiles,nfiles),dtype=bool)
         computed[np.arange(nfiles),np.arange(nfiles)] = True
         id_matrix = np.empty((nfiles,nfiles),dtype=object)
+        cloud_sizes = np.ones((nfiles,nfiles))
 
 
     m = computed == False
     with tqdm(total=m.sum(), position=0, leave=True, desc=f'Compare all to all. Voxelsize={voxel_size}') as pbar:
         for i,file_target in enumerate(files):
             pc_target = o3d.io.read_point_cloud(file_target)
+            p_target = np.asarray(pc_target.points).shape[0]
             for j,file_source in enumerate(files):
                 if j == i or computed[i,j]:
                     if save_image:
@@ -88,6 +87,7 @@ def compare_all_to_all(files, voxel_size, output_path, init_transforms=None, sav
                     init_transform = init_transforms[i,j]
 
                 pc_source = o3d.io.read_point_cloud(file_source)
+                p_source = np.asarray(pc_source.points).shape[0]
 
                 registration_result = pc_registration2(pc_source, pc_target, voxel_size, init_transform=init_transform,print_performance=debug)
 
@@ -95,15 +95,16 @@ def compare_all_to_all(files, voxel_size, output_path, init_transforms=None, sav
                 inlier_rmses[i,j] = registration_result.inlier_rmse
                 transformations[i,j] = registration_result.transformation
                 id_matrix[i,j] = ids[i] + "+" + ids[j]
+                cloud_sizes[i,j] = p_source/p_target
                 pbar.update()
 
                 computed[i,j] = True
-                np.savez(checkpoint_file, ids=ids, transformations=transformations, fits=fits, inlier_rmses=inlier_rmses, computed=computed, id_matrix=id_matrix, voxel_size=voxel_size)
+                np.savez(checkpoint_file, ids=ids, transformations=transformations, fits=fits, inlier_rmses=inlier_rmses, computed=computed, id_matrix=id_matrix, voxel_size=voxel_size, cloud_sizes=cloud_sizes)
                 if save_image:
                     output_file = os.path.join(output_path,f"{i}_{j}.png")
                     save_image_of_3d(pc_target, output_file, pc_source=pc_source,transform_source=transformations[i,j])
 
-    return transformations, fits, inlier_rmses
+    return transformations, fits, inlier_rmses, cloud_sizes
 
                 # output_file = os.path.join(output_folder, f"global_reg_{i}_{j}.png")
                 # save_image_of_3d(pc_target, output_file, pc_source=pc_source,transform_source=registration_result_global.transformation)
