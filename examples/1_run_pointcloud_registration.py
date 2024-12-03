@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     os.makedirs(output_path, exist_ok=True)
 
-    names, fits, inlier_rmse, transformations = prepare_base_set(input_path,voxel_size,input_path_low_res,voxel_size_low_res,output_folder=output_path, indices=indices, max_files=3)
+    names, fits, inlier_rmse, transformations = prepare_base_set(input_path,voxel_size,input_path_low_res,voxel_size_low_res,output_folder=output_path, indices=indices)
     n = len(fits)
     fig, axs = plt.subplots(1, 2, figsize=(15,15))
     mshow(axs[0], fits, n, f'fitness, voxel={voxel_size:1.1f}',labels=names)
