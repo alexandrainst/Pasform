@@ -45,9 +45,10 @@ def prepare_base_set(path,voxel_size,path_low_res,voxel_size_low_res,output_fold
     print(f"Running pairwise point cloud registration on the following: {names}")
     output_path_low_res = os.path.join(output_folder,'low_res')
     output_path_high_res = os.path.join(output_folder,'high_res')
+    print(f"Starting low resolution point cloud registration with voxel size {voxel_size_low_res}")
     transformations_low_res, fits_low_res, inlier_rmse_low_res, cloud_sizes_low_res = compare_all_to_all(files_low_res,voxel_size_low_res,output_path_low_res,save_image=True, ids=names)
+    print(f"Starting high resolution point cloud registration with voxel size {voxel_size}")
     transformations, fits, inlier_rmse, cloud_sizes = compare_all_to_all(files,voxel_size,output_path_high_res,init_transforms=transformations_low_res,save_image=True, ids=names)
-
     return names, fits, inlier_rmse, transformations
 
 

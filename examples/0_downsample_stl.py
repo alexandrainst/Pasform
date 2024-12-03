@@ -44,6 +44,7 @@ if __name__ == "__main__":
         print(f'No stl files found in the input directory {input_dir}')
         exit()
 
+    print("Converting stl files to point clouds at various voxel sizes...")
     for stl_file in tqdm(stl_files):
         pcd = convert_stl_to_pointcloud(str(stl_file))
 
@@ -57,5 +58,5 @@ if __name__ == "__main__":
             fileout_i = os.path.join(output_path_i, stl_file.name[:-3] + 'pcd')
             o3d.io.write_point_cloud(fileout_i, pcd_d)
 
-        print('Processed : ', str(stl_file))
-        print(f'{len(pcd.points)} datapoints')
+        # print('Processed : ', str(stl_file))
+        # print(f'{len(pcd.points)} datapoints')

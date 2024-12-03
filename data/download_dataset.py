@@ -36,8 +36,10 @@ if __name__ == "__main__":
     filename = "brooches.zip"
     directory_to_extract_in = './data'
 
+    print(f"Downloading dataset from Zenodo...")
     download_zenodo_artefacts(filename)
 
+    print(f"Extracting dataset...")
     with zipfile.ZipFile(filename, 'r') as zip_ref:
         zip_ref.extractall(directory_to_extract_in)
     os.remove(filename)

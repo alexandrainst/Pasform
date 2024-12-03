@@ -23,7 +23,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     set_seed(args.seed)
-
+    print("Clustering the results of the point cloud registration and producing plots...")
 
     np.set_printoptions(precision=2,linewidth=500)
     path_images_in = args.input_image_path
