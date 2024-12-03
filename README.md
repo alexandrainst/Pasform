@@ -45,3 +45,7 @@ The project was developed and run on a laptop with the following specs:
 13th Gen Intel(R) Core(TM) i7-13800H
 32 GB ram
 NVIDIA GeForce RTX 4060
+
+## Reproduceability
+It should be noted that the exact results seen in the paper will likely not be produced due to the non-deterministic nature of the point cloud registration, which unfortunately does not seem to respect seeds.
+However,  the results should produce similar looking results.
